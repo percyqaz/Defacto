@@ -2,6 +2,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>defacto</ToolCommandName>
+    <Version>0.1.0</Version>
+    <Authors>Percyqaz</Authors>
+    <Description>Opinionated F# all-in-one formatter and linter</Description>
+    <RepositoryUrl>https://github.com/percyqaz/Defacto</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Message.fs" />
