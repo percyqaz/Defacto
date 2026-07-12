@@ -1,5 +1,7 @@
 open System.IO
 open Fantomas.Core
+open FSharpLint.Framework
+open FSharpLint.Application
 open Ignore
 open Defacto
 
@@ -86,13 +88,36 @@ let get_files () : string array =
 
 let check_files () : unit =
     let files = get_files()
-
+    
+    let fsharplint_config = Configuration.parseConfig(Config.GetText("fsharplint.json"))
+    
+    let lint_config : OptionalLintParameters =
+        {
+            ReceivedWarning = None
+            CancellationToken = None
+            Configuration = Configuration(fsharplint_config)
+            ReportLinterProgress = None
+        }
+        
+    let lint_results =
+        asyncLintFiles lint_config files |> Async.RunSynchronously
+        
     let check_results =
         files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
+        
+    match lint_results with
+    | LintResult.Success warnings ->
+        for w in warnings do
+            printfn "%s(%i,%i,%i,%i): %s: %s"
+                w.FilePath
+                w.Details.Range.StartLine w.Details.Range.StartColumn w.Details.Range.EndLine w.Details.Range.EndColumn
+                w.RuleIdentifier
+                w.Details.Message
+    | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
 
     for file, result in check_results do
         match result with
-        | Ok true -> printfn "%s: DF0001: Needs formatting" file
+        | Ok true -> printfn "%s: DF0001: Needs formatting." file
         | Ok false -> ()
         | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
