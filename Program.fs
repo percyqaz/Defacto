@@ -1,5 +1,6 @@
 open System.IO
 open Fantomas.Core
+open Ignore
 open Defacto
 
 let config: FormatConfig =
@@ -16,9 +17,6 @@ let config: FormatConfig =
         MaxRecordNumberOfItems = 3
         RecordMultilineFormatter = NumberOfItems
     }
-
-let source_text =
-    "namespace Defacto.Test\nopen System.IO\nmodule Test = let hello = System.Console.WriteLine 2; List.concat [3;2] [Console.read 4]"
 
 let format_source_code_async (source_text: string) : Async<string> =
     async {
@@ -60,10 +58,8 @@ let format_file (file: string) : Async<string * Result<bool, string>> =
         | Choice2Of2 err -> file, Error err.Message
     )
 
-open Ignore
-
 [<EntryPoint>]
-let main argv : int =
+let main (argv: string array) : int =
 
     let walk_tree_specific_file (target: string) : string option =
         let mutable current_path = Path.GetFullPath(".")
@@ -80,7 +76,7 @@ let main argv : int =
             Array.fold<string, Ignore> _.Add (Ignore()) lines
         | None -> Ignore()
 
-    let get_files () =
+    let get_files () : string array =
         let cwd = Directory.GetCurrentDirectory()
         let ignore = get_ignore_list()
 
@@ -91,7 +87,7 @@ let main argv : int =
             not(ignore.IsIgnored(relative))
         )
 
-    let check_files () =
+    let check_files () : unit =
         let files = get_files()
 
         let check_results =
@@ -103,7 +99,7 @@ let main argv : int =
             | Ok false -> ()
             | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
-    let format_files () =
+    let format_files () : unit =
         let files = get_files()
 
         let format_results =
