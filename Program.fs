@@ -58,72 +58,71 @@ let format_file (file: string) : Async<string * Result<bool, string>> =
         | Choice2Of2 err -> file, Error err.Message
     )
 
+let walk_tree_specific_file (target: string) : string option =
+    let mutable current_path = Path.GetFullPath(".")
+
+    while current_path <> null && not(File.Exists(Path.Combine(current_path, target))) do
+        current_path <- Path.GetDirectoryName(current_path)
+
+    if current_path = null then None else Some(Path.Combine(current_path, target))
+
+let get_ignore_list () : Ignore =
+    match walk_tree_specific_file(".fantomasignore") with
+    | Some ignore_file ->
+        let lines = File.ReadAllLines(ignore_file)
+        Array.fold<string, Ignore> _.Add (Ignore()) lines
+    | None -> Ignore()
+
+let get_files () : string array =
+    let cwd = Directory.GetCurrentDirectory()
+    let ignore = get_ignore_list()
+
+    Directory.GetFiles(cwd, "*.fs", SearchOption.AllDirectories)
+    |> Array.filter(fun path ->
+        let relative = Path.GetRelativePath(cwd, path).Replace("\\", "/")
+
+        not(ignore.IsIgnored(relative))
+    )
+
+let check_files () : unit =
+    let files = get_files()
+
+    let check_results =
+        files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
+
+    for file, result in check_results do
+        match result with
+        | Ok true -> printfn "%s: DF0001: Needs formatting" file
+        | Ok false -> ()
+        | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+
+let format_files () : unit =
+    let files = get_files()
+
+    let format_results =
+        files |> Array.map format_file |> Async.Parallel |> Async.RunSynchronously
+
+    let mutable formatted = 0
+    let mutable unchanged = 0
+
+    for file, result in format_results do
+        match result with
+        | Ok true -> formatted <- formatted + 1
+        | Ok false -> unchanged <- unchanged + 1
+        | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+
+    printfn "%i files formatted. %i files unchanged." formatted unchanged
+
 [<EntryPoint>]
 let main (argv: string array) : int =
-
-    let walk_tree_specific_file (target: string) : string option =
-        let mutable current_path = Path.GetFullPath(".")
-
-        while current_path <> null && not(File.Exists(Path.Combine(current_path, target))) do
-            current_path <- Path.GetDirectoryName(current_path)
-
-        if current_path = null then None else Some(Path.Combine(current_path, target))
-
-    let get_ignore_list () : Ignore =
-        match walk_tree_specific_file(".fantomasignore") with
-        | Some ignore_file ->
-            let lines = File.ReadAllLines(ignore_file)
-            Array.fold<string, Ignore> _.Add (Ignore()) lines
-        | None -> Ignore()
-
-    let get_files () : string array =
-        let cwd = Directory.GetCurrentDirectory()
-        let ignore = get_ignore_list()
-
-        Directory.GetFiles(cwd, "*.fs", SearchOption.AllDirectories)
-        |> Array.filter(fun path ->
-            let relative = Path.GetRelativePath(cwd, path).Replace("\\", "/")
-
-            not(ignore.IsIgnored(relative))
-        )
-
-    let check_files () : unit =
-        let files = get_files()
-
-        let check_results =
-            files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
-
-        for file, result in check_results do
-            match result with
-            | Ok true -> printfn "%s: DF0001: Needs formatting" file
-            | Ok false -> ()
-            | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
-
-    let format_files () : unit =
-        let files = get_files()
-
-        let format_results =
-            files |> Array.map format_file |> Async.Parallel |> Async.RunSynchronously
-
-        let mutable formatted = 0
-        let mutable unchanged = 0
-
-        for file, result in format_results do
-            match result with
-            | Ok true -> formatted <- formatted + 1
-            | Ok false -> unchanged <- unchanged + 1
-            | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
-
-        printfn "%i files formatted. %i files unchanged." formatted unchanged
-
     let arg = if argv.Length > 0 then argv.[0] else ""
 
     match arg with
     | "check" -> check_files()
     | "format" -> format_files()
     | "writeconfig" -> printfn "not yet implemented"
-        // todo: auto-write editorconfig and fsharplint.json
-        // todo: auto-add .editorconfig and fsharplint.json to .gitignore if exists
+    // todo: auto-write editorconfig and fsharplint.json
+    // todo: auto-add .editorconfig and fsharplint.json to .gitignore if exists
     | _ -> printfn "usage: defacto check, defacto format"
 
     0
