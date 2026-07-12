@@ -29,17 +29,25 @@ let format_source_code_async (source_text: string) : Async<string> =
         return! CodeFormatter.FormatOakAsync(ast, config)
     }
 
-let check_file (file: string) : Async<string * Result<bool, string>> =
+let check_file (file: string) : Async<Result<Message list, string * string>> =
     async {
         let! text = Async.AwaitTask(File.ReadAllTextAsync(file))
         let! formatted = format_source_code_async(text)
-        return (text <> formatted)
+        let messages =
+            if text <> formatted then
+                [{ Id = DF0001; FilePath = file; Location = None }]
+            else []
+        let messages =
+            MembersMissingTypeAnnotationRule.find_matches(file, text)
+            |> List.ofSeq
+            |> List.append messages
+        return messages
     }
     |> Async.Catch
     |> Async.map(
         function
-        | Choice1Of2 needs_format -> file, Ok needs_format
-        | Choice2Of2 err -> file, Error err.Message
+        | Choice1Of2 messages -> Ok messages
+        | Choice2Of2 err -> Error (file, err.Message)
     )
 
 let format_file (file: string) : Async<string * Result<bool, string>> =
@@ -115,11 +123,10 @@ let check_files () : unit =
                 w.Details.Message
     | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
 
-    for file, result in check_results do
+    for result in check_results do
         match result with
-        | Ok true -> printfn "%s: DF0001: Needs formatting." file
-        | Ok false -> ()
-        | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+        | Ok messages -> for message in messages do printfn "%O" message
+        | Error (file, reason) -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
 let format_files () : unit =
     let files = get_files()
