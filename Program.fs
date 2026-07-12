@@ -79,6 +79,19 @@ let check_file(file: string) : Async<string * Result<bool, string>> =
     |> Async.Catch
     |> Async.map (function Choice1Of2 needs_format -> file, Ok needs_format | Choice2Of2 err -> file, Error err.Message)
     
+let format_file(file: string) : Async<string * Result<bool, string>> =
+    async {
+        let! text = Async.AwaitTask(File.ReadAllTextAsync(file))
+        let! formatted = format_source_code_async(text)
+        if text <> formatted then
+            do! Async.AwaitTask(File.WriteAllTextAsync(file, formatted))
+            return true
+        else
+            return false
+    }
+    |> Async.Catch
+    |> Async.map (function Choice1Of2 needs_format -> file, Ok needs_format | Choice2Of2 err -> file, Error err.Message)
+    
 [<EntryPoint>]
 let main argv : int =
     let ignore = Ignore.Ignore().Add("**/bin").Add("**/obj")
@@ -90,16 +103,35 @@ let main argv : int =
             not(ignore.IsIgnored(relative))
         )
         
-    let check_results =
-        files
-        |> Array.map check_file
-        |> Async.Parallel
-        |> Async.RunSynchronously
+    let check_files(files: string array) =
+        let check_results =
+            files
+            |> Array.map check_file
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            
+        for file, result in check_results do
+            match result with
+            | Ok true -> printfn "%s: DF0001: Needs formatting" file
+            | Ok false -> ()
+            | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+            
+    let format_files(files: string array) =
+        let format_results =
+            files
+            |> Array.map format_file
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            
+        let mutable formatted = 0
+        let mutable unchanged = 0
+        for file, result in format_results do
+            match result with
+            | Ok true -> formatted <- formatted + 1
+            | Ok false -> unchanged <- unchanged + 1
+            | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+        printfn "%i files formatted. %i files unchanged." formatted unchanged
         
-    for file, result in check_results do
-        match result with
-        | Ok true -> printfn "%s: DF0001: Needs formatting" file
-        | Ok false -> ()
-        | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+    format_files(files)
     
     0
