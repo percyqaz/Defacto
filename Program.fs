@@ -40,6 +40,9 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
         let messages =
             MembersMissingTypeAnnotationRule.find_matches(file, text) |> List.ofSeq |> List.append messages
 
+        let messages =
+            BannedSymbolsRule.find_matches(file, text) |> List.ofSeq |> List.append messages
+
         return messages
     }
     |> Async.Catch

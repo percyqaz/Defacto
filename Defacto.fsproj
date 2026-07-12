@@ -12,9 +12,11 @@
   <ItemGroup>
     <Compile Include="Message.fs" />
     <EmbeddedResource Include="Config\fsharplint.json" />
+    <EmbeddedResource Include="Config\BannedSymbols.txt" />
     <Compile Include="Config\Config.fs" />
     <Compile Include="Rules\PascalCaseSingleArgumentBracketsRule.fs" />
     <Compile Include="Rules\MembersMissingTypeAnnotationRule.fs" />
+    <Compile Include="Rules\BannedSymbolsRule.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
