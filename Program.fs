@@ -116,7 +116,7 @@ let check_files () : unit =
 
     match lint_results with
     | LintResult.Success warnings ->
-        for w in warnings do
+        for w in warnings |> Seq.where AllowShoutingSnakeCaseRule.filter_fsharplint_warning do
             printfn
                 "%s(%i,%i,%i,%i): %s: %s"
                 w.FilePath

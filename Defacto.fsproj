@@ -17,6 +17,7 @@
     <Compile Include="Rules\PascalCaseSingleArgumentBracketsRule.fs" />
     <Compile Include="Rules\MembersMissingTypeAnnotationRule.fs" />
     <Compile Include="Rules\BannedSymbolsRule.fs" />
+    <Compile Include="Rules\AllowShoutingSnakeCaseRule.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
