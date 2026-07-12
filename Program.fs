@@ -107,12 +107,29 @@ let format_file (file: string) : Async<string * Result<bool, string>> =
         | Choice2Of2 err -> file, Error err.Message
     )
 
+open Ignore
+
 [<EntryPoint>]
 let main argv : int =
 
+    let walk_tree_specific_file (target: string) : string option =
+        let mutable current_path = Path.GetFullPath(".")
+
+        while current_path <> null && not(File.Exists(Path.Combine(current_path, target))) do
+            current_path <- Path.GetDirectoryName(current_path)
+
+        if current_path = null then None else Some(Path.Combine(current_path, target))
+
+    let get_ignore_list () : Ignore =
+        match walk_tree_specific_file(".fantomasignore") with
+        | Some ignore_file ->
+            let lines = File.ReadAllLines(ignore_file)
+            Array.fold<string, Ignore> _.Add (Ignore()) lines
+        | None -> Ignore()
+
     let get_files () =
         let cwd = Directory.GetCurrentDirectory()
-        let ignore = Ignore.Ignore().Add("**/bin").Add("**/obj")
+        let ignore = get_ignore_list()
 
         Directory.GetFiles(cwd, "*.fs", SearchOption.AllDirectories)
         |> Array.filter(fun path ->
