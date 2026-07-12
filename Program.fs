@@ -16,8 +16,6 @@ let config: FormatConfig =
         MaxRecordNumberOfItems = 3
         RecordMultilineFormatter = NumberOfItems
     }
-// todo: auto-write editorconfig and fsharplint.json
-// todo: auto-add .editorconfig and fsharplint.json to .gitignore if exists
 
 let source_text =
     "namespace Defacto.Test\nopen System.IO\nmodule Test = let hello = System.Console.WriteLine 2; List.concat [3;2] [Console.read 4]"
@@ -127,6 +125,9 @@ let main argv : int =
     match arg with
     | "check" -> check_files()
     | "format" -> format_files()
+    | "writeconfig" -> printfn "not yet implemented"
+        // todo: auto-write editorconfig and fsharplint.json
+        // todo: auto-add .editorconfig and fsharplint.json to .gitignore if exists
     | _ -> printfn "usage: defacto check, defacto format"
 
     0
