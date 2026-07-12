@@ -109,18 +109,20 @@ let format_file (file: string) : Async<string * Result<bool, string>> =
 
 [<EntryPoint>]
 let main argv : int =
-    let ignore = Ignore.Ignore().Add("**/bin").Add("**/obj")
 
-    let files =
-        Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fs", SearchOption.AllDirectories)
+    let get_files() =
+        let cwd = Directory.GetCurrentDirectory()
+        let ignore = Ignore.Ignore().Add("**/bin").Add("**/obj")
+        Directory.GetFiles(cwd, "*.fs", SearchOption.AllDirectories)
         |> Array.filter(fun path ->
             let relative =
-                Path.GetRelativePath(Directory.GetCurrentDirectory(), path).Replace("\\", "/")
+                Path.GetRelativePath(cwd, path).Replace("\\", "/")
 
             not(ignore.IsIgnored(relative))
         )
 
-    let check_files (files: string array) =
+    let check_files () =
+        let files = get_files()
         let check_results =
             files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
 
@@ -130,7 +132,8 @@ let main argv : int =
             | Ok false -> ()
             | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
-    let format_files (files: string array) =
+    let format_files () =
+        let files = get_files()
         let format_results =
             files |> Array.map format_file |> Async.Parallel |> Async.RunSynchronously
 
@@ -145,6 +148,10 @@ let main argv : int =
 
         printfn "%i files formatted. %i files unchanged." formatted unchanged
 
-    format_files(files)
+    let arg = if argv.Length > 0 then argv.[0] else ""
+    match arg with
+    | "check" -> check_files()
+    | "format" -> format_files()
+    | _ -> printfn "usage: defacto check, defacto format"
 
     0
