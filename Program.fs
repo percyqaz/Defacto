@@ -33,21 +33,20 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
     async {
         let! text = Async.AwaitTask(File.ReadAllTextAsync(file))
         let! formatted = format_source_code_async(text)
+
         let messages =
-            if text <> formatted then
-                [{ Id = DF0001; FilePath = file; Location = None }]
-            else []
+            if text <> formatted then [ { Id = DF0001; FilePath = file; Location = None } ] else []
+
         let messages =
-            MembersMissingTypeAnnotationRule.find_matches(file, text)
-            |> List.ofSeq
-            |> List.append messages
+            MembersMissingTypeAnnotationRule.find_matches(file, text) |> List.ofSeq |> List.append messages
+
         return messages
     }
     |> Async.Catch
     |> Async.map(
         function
         | Choice1Of2 messages -> Ok messages
-        | Choice2Of2 err -> Error (file, err.Message)
+        | Choice2Of2 err -> Error(file, err.Message)
     )
 
 let format_file (file: string) : Async<string * Result<bool, string>> =
@@ -96,37 +95,42 @@ let get_files () : string array =
 
 let check_files () : unit =
     let files = get_files()
-    
+
     let fsharplint_config = Configuration.parseConfig(Config.GetText("fsharplint.json"))
-    
-    let lint_config : OptionalLintParameters =
+
+    let lint_config: OptionalLintParameters =
         {
             ReceivedWarning = None
             CancellationToken = None
             Configuration = Configuration(fsharplint_config)
             ReportLinterProgress = None
         }
-        
-    let lint_results =
-        asyncLintFiles lint_config files |> Async.RunSynchronously
-        
+
+    let lint_results = asyncLintFiles lint_config files |> Async.RunSynchronously
+
     let check_results =
         files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
-        
+
     match lint_results with
     | LintResult.Success warnings ->
         for w in warnings do
-            printfn "%s(%i,%i,%i,%i): %s: %s"
+            printfn
+                "%s(%i,%i,%i,%i): %s: %s"
                 w.FilePath
-                w.Details.Range.StartLine w.Details.Range.StartColumn w.Details.Range.EndLine w.Details.Range.EndColumn
+                w.Details.Range.StartLine
+                w.Details.Range.StartColumn
+                w.Details.Range.EndLine
+                w.Details.Range.EndColumn
                 w.RuleIdentifier
                 w.Details.Message
     | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
 
     for result in check_results do
         match result with
-        | Ok messages -> for message in messages do printfn "%O" message
-        | Error (file, reason) -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+        | Ok messages ->
+            for message in messages do
+                printfn "%O" message
+        | Error(file, reason) -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
 let format_files () : unit =
     let files = get_files()
