@@ -110,19 +110,20 @@ let format_file (file: string) : Async<string * Result<bool, string>> =
 [<EntryPoint>]
 let main argv : int =
 
-    let get_files() =
+    let get_files () =
         let cwd = Directory.GetCurrentDirectory()
         let ignore = Ignore.Ignore().Add("**/bin").Add("**/obj")
+
         Directory.GetFiles(cwd, "*.fs", SearchOption.AllDirectories)
         |> Array.filter(fun path ->
-            let relative =
-                Path.GetRelativePath(cwd, path).Replace("\\", "/")
+            let relative = Path.GetRelativePath(cwd, path).Replace("\\", "/")
 
             not(ignore.IsIgnored(relative))
         )
 
     let check_files () =
         let files = get_files()
+
         let check_results =
             files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
 
@@ -134,6 +135,7 @@ let main argv : int =
 
     let format_files () =
         let files = get_files()
+
         let format_results =
             files |> Array.map format_file |> Async.Parallel |> Async.RunSynchronously
 
@@ -149,6 +151,7 @@ let main argv : int =
         printfn "%i files formatted. %i files unchanged." formatted unchanged
 
     let arg = if argv.Length > 0 then argv.[0] else ""
+
     match arg with
     | "check" -> check_files()
     | "format" -> format_files()
