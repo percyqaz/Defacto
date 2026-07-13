@@ -96,9 +96,10 @@ let get_files () : string array =
         not(ignore.IsIgnored(relative))
     )
 
-let check_files () : unit =
-    let files = get_files()
+[<Literal>]
+let FSHARP_LINT_FILE_LIMIT = 25
 
+let check_files_fsharplint (files: string array) : unit =
     let fsharplint_config = Configuration.parseConfig(Config.GetText("fsharplint.json"))
 
     let lint_config: OptionalLintParameters =
@@ -110,9 +111,6 @@ let check_files () : unit =
         }
 
     let lint_results = asyncLintFiles lint_config files |> Async.RunSynchronously
-
-    let check_results =
-        files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
 
     match lint_results with
     | LintResult.Success warnings ->
@@ -128,12 +126,26 @@ let check_files () : unit =
                 w.Details.Message
     | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
 
+let check_files_fantomas (files: string array) : unit =
+    let check_results =
+        files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
+
     for result in check_results do
         match result with
         | Ok messages ->
             for message in messages do
                 printfn "%O" message
         | Error(file, reason) -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+
+let check_files () : unit =
+    let files = get_files()
+
+    if files.Length > FSHARP_LINT_FILE_LIMIT then
+        printfn "Skipping FSharpLint checks as there are over %i files" FSHARP_LINT_FILE_LIMIT
+    else
+        check_files_fsharplint(files)
+
+    check_files_fantomas(files)
 
 let format_files () : unit =
     let files = get_files()

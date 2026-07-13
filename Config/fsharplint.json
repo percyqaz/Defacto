@@ -77,7 +77,7 @@
   "indexerAccessorStyleConsistency": { "enabled": true, "config": {"style": "OCaml"} },
   "favourSingleton": {"enabled": false},
   "noAsyncRunSynchronouslyInLibrary": {"enabled": false},
-  "favourNestedFunctions": {"enabled": true},
+  "favourNestedFunctions": {"enabled": false},
   "disallowShadowing": {"enabled": false},
   "discourageStringInterpolationWithStringFormat": {"enabled": false},
   "favourNamedMembers": {"enabled": false},
