@@ -2,3 +2,4 @@
 **/obj
 .idea
 *.user
+.editorconfig
