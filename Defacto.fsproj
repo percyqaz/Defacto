@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Message.fs" />
+    <EmbeddedResource Include="Config\.editorconfig" />
     <EmbeddedResource Include="Config\fsharplint.json" />
     <EmbeddedResource Include="Config\BannedSymbols.txt" />
     <Compile Include="Config\Config.fs" />

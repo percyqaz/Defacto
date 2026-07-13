@@ -163,6 +163,24 @@ let format_files () : unit =
         | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
 
     printfn "%i files formatted. %i files unchanged." formatted unchanged
+    
+let write_config () : unit =
+    
+    let inline get_config_directory () : string option =
+        match walk_tree_specific_file(".fantomasignore") with
+        | Some ignore_file -> Some (Path.GetDirectoryName(ignore_file))
+        | None -> None
+        
+    match get_config_directory() with
+    | None -> printfn "Could not detect where to write config!"
+    | Some location ->
+        let editorconfig_path = Path.Combine(location, ".editorconfig")
+        let fantomasignore_path = Path.Combine(location, ".fantomasignore")
+        
+        File.WriteAllText(editorconfig_path, Config.GetText(".editorconfig"))
+        
+        if not(File.Exists(fantomasignore_path)) then
+            File.WriteAllLines(fantomasignore_path, [|"**/bin"; "**/obj"|])
 
 [<EntryPoint>]
 let main (argv: string array) : int =
@@ -171,9 +189,7 @@ let main (argv: string array) : int =
     match arg with
     | "check" -> check_files()
     | "format" -> format_files()
-    | "writeconfig" -> printfn "not yet implemented"
-    // todo: auto-write editorconfig and fsharplint.json
-    // todo: auto-add .editorconfig and fsharplint.json to .gitignore if exists
+    | "writeconfig" -> write_config()
     | _ -> printfn "usage: defacto check, defacto format"
 
     0
