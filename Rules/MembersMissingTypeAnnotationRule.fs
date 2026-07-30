@@ -6,7 +6,7 @@ module MembersMissingTypeAnnotationRule =
 
     let regex =
         Regex(
-            "(member|override)(?>( internal| private)?)(?>( inline)?)( this\.)?[A-Za-z]+\([^\)]*\) =",
+            "(static )?(member|override)(?>( internal| private)?)(?>( inline)?) (this\.)?[A-Za-z]+\([^\)]*\) =",
             RegexOptions.Compiled
         )
 
