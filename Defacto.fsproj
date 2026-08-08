@@ -10,11 +10,11 @@
     <RepositoryUrl>https://github.com/percyqaz/Defacto</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Message.fs" />
     <EmbeddedResource Include="Config\.editorconfig" />
     <EmbeddedResource Include="Config\BannedSymbols.txt" />
     <Compile Include="Config\Config.fs" />
     <Compile Include="Formatting\SyntaxTreeFormatting.fs" />
+    <Compile Include="Checks\Message.fs" />
     <Compile Include="Checks\SyntaxTreeChecks.fs" />
     <Compile Include="Checks\RegexChecks.fs" />
     <Compile Include="Checks\BannedSymbolChecks.fs" />

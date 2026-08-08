@@ -15,8 +15,6 @@ module SyntaxTreeChecks =
         member this.ToMessage(file: string) : Message =
             { FilePath = file; Id = this.Id; Location = Some(this.Position.Line, this.Position.Column) }
 
-    let obj = Object()
-
     let find_warnings (oak: Oak) : ResizeArray<Warning> =
         let warnings = ResizeArray<Warning>()
 
@@ -59,6 +57,7 @@ module SyntaxTreeChecks =
         let rec walk_all_nodes (node: Node) =
             match node with
             | :? ExprLetOrUseNode as expr -> warnings.AddRange(snake_case_let(expr))
+            | :? ExprLetOrUseBangNode as expr -> warnings.AddRange(snake_case_let_pattern(expr.Pattern))
             | _ -> ()
 
             for child in node.Children do
