@@ -11,7 +11,6 @@ module MembersMissingTypeAnnotationRule =
         )
 
     let find_matches (file_path: string, source_text: string) : Message seq =
-
         seq {
             for regex_match in regex.Matches(source_text) do
                 let line_n, line_pos = Message.IndexToLocation(source_text, regex_match.Index + 1)

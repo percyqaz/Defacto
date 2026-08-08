@@ -22,7 +22,7 @@ let config: FormatConfig =
 
 let format_source_code_async (source_text: string) : Async<string> =
     async {
-        let! source_text_fixed = PascalCaseSingleArgumentBracketsRule.fix_brackets_source_text_async(source_text)
+        let! source_text_fixed = SyntaxTreeFormatting.find_and_apply_fixes(source_text)
 
         let! ast_array = CodeFormatter.ParseOakAsync(false, source_text_fixed)
         let ast, _ = ast_array.[0]
@@ -38,10 +38,10 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
             if text <> formatted then [ { Id = DF0001; FilePath = file; Location = None } ] else []
 
         let messages =
-            MembersMissingTypeAnnotationRule.find_matches(file, text) |> List.ofSeq |> List.append messages
+            MembersMissingTypeAnnotationRule.find_matches(file, text) |> List.ofSeq |> List.append(messages)
 
         let messages =
-            BannedSymbolsRule.find_matches(file, text) |> List.ofSeq |> List.append messages
+            BannedSymbolsRule.find_matches(file, text) |> List.ofSeq |> List.append(messages)
 
         return messages
     }
@@ -114,7 +114,7 @@ let check_files_fsharplint (files: string array) : unit =
 
     match lint_results with
     | LintResult.Success warnings ->
-        for w in warnings |> Seq.where AllowShoutingSnakeCaseRule.filter_fsharplint_warning do
+        for w in warnings |> Seq.where(AllowShoutingSnakeCaseRule.filter_fsharplint_warning) do
             printfn
                 "%s(%i,%i,%i,%i): %s: %s"
                 w.FilePath
@@ -128,7 +128,7 @@ let check_files_fsharplint (files: string array) : unit =
 
 let check_files_fantomas (files: string array) : unit =
     let check_results =
-        files |> Array.map check_file |> Async.Parallel |> Async.RunSynchronously
+        files |> Array.map(check_file) |> Async.Parallel |> Async.RunSynchronously
 
     for result in check_results do
         match result with
@@ -151,7 +151,7 @@ let format_files () : unit =
     let files = get_files()
 
     let format_results =
-        files |> Array.map format_file |> Async.Parallel |> Async.RunSynchronously
+        files |> Array.map(format_file) |> Async.Parallel |> Async.RunSynchronously
 
     let mutable formatted = 0
     let mutable unchanged = 0
@@ -189,7 +189,7 @@ let main (argv: string array) : int =
     match arg with
     | "check" -> check_files()
     | "format" -> format_files()
-    | "writeconfig" -> write_config()
-    | _ -> printfn "usage: defacto check, defacto format"
+    | "init" -> write_config()
+    | _ -> printfn "usage: defacto [check | format | init]"
 
     0
