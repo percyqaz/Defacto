@@ -18,7 +18,7 @@ module RegexChecks =
 
     let members_pascal_case =
         Regex(
-            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?)(?>( val)?) (?>(this\.)?)(?![A-Z][A-Za-z0-9]*[\s\(:])",
+            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?)(?>( val)?) (?>(this\.)?)(?![A-Z][A-Za-z0-9]*[\s\(:]|\()",
             RegexOptions.Compiled
         )
 
