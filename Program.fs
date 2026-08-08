@@ -126,18 +126,25 @@ let check_files_fsharplint (files: string array) : unit =
                 w.Details.Message
     | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
 
-let check_files_fantomas (files: string array) : unit =
+let check_files_fantomas (files: string array) : Result<unit, unit> =
     let check_results =
         files |> Array.map(check_file) |> Async.Parallel |> Async.RunSynchronously
+
+    let mutable any_warnings = false
 
     for result in check_results do
         match result with
         | Ok messages ->
             for message in messages do
                 printfn "%O" message
-        | Error(file, reason) -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+                any_warnings <- true
+        | Error(file, reason) ->
+            printfn "%s: DF0000: Error while checking formatting! %s" file reason
+            any_warnings <- true
 
-let check_files () : unit =
+    if any_warnings then Error() else Ok()
+
+let check_files () : Result<unit, unit> =
     let files = get_files()
 
     if files.Length > FSHARP_LINT_FILE_LIMIT then
@@ -147,7 +154,8 @@ let check_files () : unit =
 
     check_files_fantomas(files)
 
-let format_files () : unit =
+
+let format_files () : Result<unit, unit> =
     let files = get_files()
 
     let format_results =
@@ -155,14 +163,18 @@ let format_files () : unit =
 
     let mutable formatted = 0
     let mutable unchanged = 0
+    let mutable errors = 0
 
     for file, result in format_results do
         match result with
         | Ok true -> formatted <- formatted + 1
         | Ok false -> unchanged <- unchanged + 1
-        | Error reason -> printfn "%s: DF0000: Error while checking formatting! %s" file reason
+        | Error reason ->
+            printfn "%s: DF0000: Error while formatting! %s" file reason
+            errors <- errors + 1
 
     printfn "%i files formatted. %i files unchanged." formatted unchanged
+    if errors <> 0 then Error() else Ok()
 
 let write_config () : unit =
 
@@ -187,9 +199,17 @@ let main (argv: string array) : int =
     let arg = if argv.Length > 0 then argv.[0] else ""
 
     match arg with
-    | "check" -> check_files()
-    | "format" -> format_files()
-    | "init" -> write_config()
-    | _ -> printfn "usage: defacto [check | format | init]"
-
-    0
+    | "check" ->
+        match check_files() with
+        | Ok() -> 0
+        | Error() -> 1
+    | "format" ->
+        match format_files() with
+        | Ok() -> 0
+        | Error() -> 1
+    | "init" ->
+        write_config()
+        0
+    | _ ->
+        printfn "usage: defacto [check | format | init]"
+        0
