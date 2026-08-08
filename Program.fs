@@ -1,7 +1,5 @@
 open System.IO
 open Fantomas.Core
-open FSharpLint.Framework
-open FSharpLint.Application
 open Ignore
 open Defacto
 
@@ -97,37 +95,9 @@ let get_files () : string array =
         not(ignore.IsIgnored(relative))
     )
 
-[<Literal>]
-let FSHARP_LINT_FILE_LIMIT = 25
+let check_files () : Result<unit, unit> =
+    let files = get_files()
 
-let check_files_fsharplint (files: string array) : unit =
-    let fsharplint_config = Configuration.parseConfig(Config.GetText("fsharplint.json"))
-
-    let lint_config: OptionalLintParameters =
-        {
-            ReceivedWarning = None
-            CancellationToken = None
-            Configuration = Configuration(fsharplint_config)
-            ReportLinterProgress = None
-        }
-
-    let lint_results = asyncLintFiles lint_config files |> Async.RunSynchronously
-
-    match lint_results with
-    | LintResult.Success warnings ->
-        for w in warnings do
-            printfn
-                "%s(%i,%i,%i,%i): %s: %s"
-                w.FilePath
-                w.Details.Range.StartLine
-                w.Details.Range.StartColumn
-                w.Details.Range.EndLine
-                w.Details.Range.EndColumn
-                w.RuleIdentifier
-                w.Details.Message
-    | LintResult.Failure reason -> printfn "DF0000: Error while linting! %s" reason.Description
-
-let check_files_fantomas (files: string array) : Result<unit, unit> =
     let check_results =
         files |> Array.map(check_file) |> Async.Parallel |> Async.RunSynchronously
 
@@ -144,10 +114,6 @@ let check_files_fantomas (files: string array) : Result<unit, unit> =
             any_warnings <- true
 
     if any_warnings then Error() else Ok()
-
-let check_files () : Result<unit, unit> =
-    let files = get_files()
-    check_files_fantomas(files)
 
 let format_files () : Result<unit, unit> =
     let files = get_files()

@@ -12,7 +12,6 @@
   <ItemGroup>
     <Compile Include="Message.fs" />
     <EmbeddedResource Include="Config\.editorconfig" />
-    <EmbeddedResource Include="Config\fsharplint.json" />
     <EmbeddedResource Include="Config\BannedSymbols.txt" />
     <Compile Include="Config\Config.fs" />
     <Compile Include="Rules\SyntaxTreeFormatting.fs" />
@@ -23,7 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fantomas.Core" Version="7.0.5" />
-    <PackageReference Include="FSharpLint.Core" Version="0.27.0" />
     <PackageReference Include="Ignore" Version="0.2.1" />
   </ItemGroup>
 </Project>
