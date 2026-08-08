@@ -16,9 +16,9 @@
     <EmbeddedResource Include="Config\BannedSymbols.txt" />
     <Compile Include="Config\Config.fs" />
     <Compile Include="Rules\SyntaxTreeFormatting.fs" />
+    <Compile Include="Rules\SyntaxTreeChecks.fs" />
     <Compile Include="Rules\RegexCheckWarnings.fs" />
     <Compile Include="Rules\BannedSymbolCheckWarnings.fs" />
-    <Compile Include="Rules\AllowShoutingSnakeCaseRule.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

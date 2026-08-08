@@ -9,13 +9,15 @@ module BannedSymbolCheckWarnings =
 
         seq {
             for symbol in BANNED_SYMBOLS do
-                let index = source_text.IndexOf(symbol)
+                let mutable index = source_text.IndexOf(symbol)
 
-                if index >= 0 then
+                while index >= 0 do
                     yield
                         {
                             Id = DF0004
                             FilePath = file_path
                             Location = Some(Message.IndexToLocation(source_text, index))
                         }
+
+                    index <- source_text.IndexOf(symbol, index + symbol.Length)
         }

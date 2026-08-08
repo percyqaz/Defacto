@@ -20,30 +20,23 @@ let config: FormatConfig =
         RecordMultilineFormatter = NumberOfItems
     }
 
-let format_source_code_async (source_text: string) : Async<string> =
-    async {
-        let! source_text_fixed = SyntaxTreeFormatting.find_and_apply_fixes(source_text)
-
-        let! ast_array = CodeFormatter.ParseOakAsync(false, source_text_fixed)
-        let ast, _ = ast_array.[0]
-        return! CodeFormatter.FormatOakAsync(ast, config)
-    }
-
 let check_file (file: string) : Async<Result<Message list, string * string>> =
     async {
-        let! text = Async.AwaitTask(File.ReadAllTextAsync(file))
-        let! formatted = format_source_code_async(text)
+        let messages = ResizeArray<Message>()
 
-        let messages =
-            if text <> formatted then [ { Id = DF0001; FilePath = file; Location = None } ] else []
+        let! source_text = Async.AwaitTask(File.ReadAllTextAsync(file))
+        let! source_text_fixed = SyntaxTreeFormatting.find_and_apply_fixes(source_text)
+        let! ast_array = CodeFormatter.ParseOakAsync(false, source_text_fixed)
+        let! formatted = CodeFormatter.FormatOakAsync(fst ast_array.[0], config)
 
-        let messages =
-            RegexCheckWarnings.find_matches(file, text) |> List.ofSeq |> List.append(messages)
+        if source_text <> formatted then
+            messages.Add({ Id = DF0001; FilePath = file; Location = None })
 
-        let messages =
-            BannedSymbolCheckWarnings.find_matches(file, text) |> List.ofSeq |> List.append(messages)
+        messages.AddRange(SyntaxTreeChecks.find_warnings(fst ast_array.[0]) |> Seq.map _.ToMessage(file))
+        messages.AddRange(RegexCheckWarnings.find_matches(file, source_text))
+        messages.AddRange(BannedSymbolCheckWarnings.find_matches(file, source_text))
 
-        return messages
+        return messages |> Seq.sortBy _.Location |> List.ofSeq
     }
     |> Async.Catch
     |> Async.map(
@@ -53,11 +46,19 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
     )
 
 let format_file (file: string) : Async<string * Result<bool, string>> =
-    async {
-        let! text = Async.AwaitTask(File.ReadAllTextAsync(file))
-        let! formatted = format_source_code_async(text)
 
-        if text <> formatted then
+    let format_source_code_async (source_text: string) : Async<string> =
+        async {
+            let! source_text_fixed = SyntaxTreeFormatting.find_and_apply_fixes(source_text)
+            let! ast_array = CodeFormatter.ParseOakAsync(false, source_text_fixed)
+            return! CodeFormatter.FormatOakAsync(fst ast_array.[0], config)
+        }
+
+    async {
+        let! source_text = Async.AwaitTask(File.ReadAllTextAsync(file))
+        let! formatted = format_source_code_async(source_text)
+
+        if source_text <> formatted then
             do! Async.AwaitTask(File.WriteAllTextAsync(file, formatted))
             return true
         else
@@ -114,7 +115,7 @@ let check_files_fsharplint (files: string array) : unit =
 
     match lint_results with
     | LintResult.Success warnings ->
-        for w in warnings |> Seq.where(AllowShoutingSnakeCaseRule.filter_fsharplint_warning) do
+        for w in warnings do
             printfn
                 "%s(%i,%i,%i,%i): %s: %s"
                 w.FilePath
@@ -124,7 +125,7 @@ let check_files_fsharplint (files: string array) : unit =
                 w.Details.Range.EndColumn
                 w.RuleIdentifier
                 w.Details.Message
-    | LintResult.Failure reason -> printfn "DF0002: Error while linting! %s" reason.Description
+    | LintResult.Failure reason -> printfn "DF0000: Error while linting! %s" reason.Description
 
 let check_files_fantomas (files: string array) : Result<unit, unit> =
     let check_results =
@@ -146,14 +147,7 @@ let check_files_fantomas (files: string array) : Result<unit, unit> =
 
 let check_files () : Result<unit, unit> =
     let files = get_files()
-
-    if files.Length > FSHARP_LINT_FILE_LIMIT then
-        printfn "Skipping FSharpLint checks as there are over %i files" FSHARP_LINT_FILE_LIMIT
-    else
-        check_files_fsharplint(files)
-
     check_files_fantomas(files)
-
 
 let format_files () : Result<unit, unit> =
     let files = get_files()
