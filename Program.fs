@@ -38,10 +38,10 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
             if text <> formatted then [ { Id = DF0001; FilePath = file; Location = None } ] else []
 
         let messages =
-            MembersMissingTypeAnnotationRule.find_matches(file, text) |> List.ofSeq |> List.append(messages)
+            RegexCheckWarnings.find_matches(file, text) |> List.ofSeq |> List.append(messages)
 
         let messages =
-            BannedSymbolsRule.find_matches(file, text) |> List.ofSeq |> List.append(messages)
+            BannedSymbolCheckWarnings.find_matches(file, text) |> List.ofSeq |> List.append(messages)
 
         return messages
     }

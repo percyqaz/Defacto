@@ -1,6 +1,6 @@
 namespace Defacto
 
-module BannedSymbolsRule =
+module BannedSymbolCheckWarnings =
 
     let BANNED_SYMBOLS =
         Config.GetText("BannedSymbols.txt").Replace("\r", "").Split("\n")

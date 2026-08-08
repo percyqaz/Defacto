@@ -2,7 +2,7 @@ namespace Defacto
 
 open System.Text.RegularExpressions
 
-module MembersMissingTypeAnnotationRule =
+module RegexCheckWarnings =
 
     let regex =
         Regex(
