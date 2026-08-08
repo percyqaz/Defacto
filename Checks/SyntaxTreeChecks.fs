@@ -34,6 +34,7 @@ module SyntaxTreeChecks =
 
         let rec snake_case_let_pattern (x: Pattern) : Warning seq =
             match x with
+            | Pattern.StructTuple t -> Seq.collect snake_case_let_pattern t.Patterns
             | Pattern.Tuple t ->
                 seq {
                     for item in t.Items do

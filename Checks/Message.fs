@@ -12,10 +12,10 @@ type MessageId =
     member this.Message: string =
         match this with
         | DF0001 -> "File needs formatting."
-        | DF0002 -> "Local variables and parameters should be snake_case"
+        | DF0002 -> "Local variables and parameters should be snake_case."
         | DF0003 -> "Method missing return type annotation."
         | DF0004 -> "Banned symbol (likely to cause mistakes or confusion)."
-        | DF0005 -> "Method names should be PascalCase"
+        | DF0005 -> "Method names should be PascalCase."
 
 type Message =
     {
