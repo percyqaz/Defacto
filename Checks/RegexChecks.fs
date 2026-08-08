@@ -2,7 +2,7 @@ namespace Defacto
 
 open System.Text.RegularExpressions
 
-module RegexCheckWarnings =
+module RegexChecks =
 
     let regex =
         Regex(

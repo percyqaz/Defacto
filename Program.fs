@@ -31,8 +31,8 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
             messages.Add({ Id = DF0001; FilePath = file; Location = None })
 
         messages.AddRange(SyntaxTreeChecks.find_warnings(fst ast_array.[0]) |> Seq.map _.ToMessage(file))
-        messages.AddRange(RegexCheckWarnings.find_matches(file, source_text))
-        messages.AddRange(BannedSymbolCheckWarnings.find_matches(file, source_text))
+        messages.AddRange(RegexChecks.find_matches(file, source_text))
+        messages.AddRange(BannedSymbolChecks.find_matches(file, source_text))
 
         return messages |> Seq.sortBy _.Location |> List.ofSeq
     }
