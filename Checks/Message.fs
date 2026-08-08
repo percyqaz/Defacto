@@ -6,16 +6,18 @@ type MessageId =
     | DF0003
     | DF0004
     | DF0005
+    | DF0006
 
     override this.ToString() : string = sprintf "%A: %s" this this.Message
 
     member this.Message: string =
         match this with
         | DF0001 -> "File needs formatting."
-        | DF0002 -> "Local variables and parameters should be snake_case."
-        | DF0003 -> "Method missing return type annotation."
-        | DF0004 -> "Banned symbol (likely to cause mistakes or confusion)."
-        | DF0005 -> "Method names should be PascalCase."
+        | DF0002 -> "Local variables and parameters should be snake_case"
+        | DF0003 -> "Method requires return type annotation"
+        | DF0004 -> "Banned symbol (likely to cause mistakes or confusion)"
+        | DF0005 -> "Member names should be PascalCase"
+        | DF0006 -> "Non-static methods should be prefixed with 'this.'"
 
 type Message =
     {
