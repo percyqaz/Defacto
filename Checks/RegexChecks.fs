@@ -6,19 +6,19 @@ module RegexChecks =
 
     let members_always_use_this =
         Regex(
-            @"(member|override)(?>( internal| private)?)(?>( inline)?) (?!this)[A-Za-z0-9]+\.",
+            @"(member|override)(?>( internal| private)?)(?>( inline)?)(?>( val)?) (?!this)[A-Za-z0-9]+\.",
             RegexOptions.Compiled
         )
 
     let members_require_type_annotation =
         Regex(
-            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?) (?>(this\.)?)[A-Za-z0-9]+\s*\([^\)]*\) =",
+            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?)(?>( val)?) (?>(this\.)?)[A-Za-z0-9]+\s*\([^\)]*\) =",
             RegexOptions.Compiled
         )
-        
+
     let members_pascal_case =
         Regex(
-            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?) (?>(this\.)?)(?![A-Z][A-Za-z0-9]*[\s\(:])",
+            @"(static )?(member|override)(?>( internal| private)?)(?>( inline)?)(?>( val)?) (?>(this\.)?)(?![A-Z][A-Za-z0-9]*[\s\(:])",
             RegexOptions.Compiled
         )
 
