@@ -28,9 +28,9 @@ module RegexChecks =
                 let line_n, line_pos = Message.IndexToLocation(source_text, m.Index + 1)
                 yield { FilePath = file_path; Location = Some(line_n, line_pos); Id = DF0003 }
 
-            for m in members_pascal_case.Matches(source_text) do
-                let line_n, line_pos = Message.IndexToLocation(source_text, m.Index)
-                yield { FilePath = file_path; Location = Some(line_n, line_pos); Id = DF0005 }
+            //for m in members_pascal_case.Matches(source_text) do
+             //   let line_n, line_pos = Message.IndexToLocation(source_text, m.Index)
+              //  yield { FilePath = file_path; Location = Some(line_n, line_pos); Id = DF0005 }
 
             for m in members_always_use_this.Matches(source_text) do
                 let line_n, line_pos = Message.IndexToLocation(source_text, m.Index)
