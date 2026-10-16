@@ -17,6 +17,7 @@ module BannedSymbolChecks =
                             Id = DF0004
                             FilePath = file_path
                             Location = Some(Message.IndexToLocation(source_text, index))
+                            Message = $"'{symbol}' is a banned symbol (likely to cause mistakes or confusion)."
                         }
 
                     index <- source_text.IndexOf(symbol, index + symbol.Length)

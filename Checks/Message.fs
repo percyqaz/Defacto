@@ -8,8 +8,6 @@ type MessageId =
     | DF0005
     | DF0006
 
-    override this.ToString() : string = sprintf "%A: %s" this this.Message
-
     member this.Message: string =
         match this with
         | DF0001 -> "File needs formatting."
@@ -24,12 +22,13 @@ type Message =
         FilePath: string
         Location: (int * int) option
         Id: MessageId
+        Message: string
     }
 
     override this.ToString() : string =
         match this.Location with
-        | Some(line, column) -> sprintf "%s(%i,%i): %O" this.FilePath line column this.Id
-        | None -> sprintf "%s: %O" this.FilePath this.Id
+        | Some(line, column) -> sprintf "%s(%i,%i): %O: %s" this.FilePath line column this.Id this.Message
+        | None -> sprintf "%s: %O: %s" this.FilePath this.Id this.Message
 
     static member IndexToLocation(source_text: string, index: int) : int * int =
         let rec loop (current_line: int) (current_index: int) =

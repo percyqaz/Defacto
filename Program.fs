@@ -28,7 +28,14 @@ let check_file (file: string) : Async<Result<Message list, string * string>> =
         let! formatted = CodeFormatter.FormatOakAsync(fst ast_array.[0], config)
 
         if source_text <> formatted then
-            messages.Add({ Id = DF0001; FilePath = file; Location = None })
+            messages.Add(
+                {
+                    Id = DF0001
+                    FilePath = file
+                    Location = None
+                    Message = DF0001.Message
+                }
+            )
 
         messages.AddRange(SyntaxTreeChecks.find_warnings(fst ast_array.[0]) |> Seq.map _.ToMessage(file))
         messages.AddRange(RegexChecks.find_matches(file, source_text))

@@ -13,7 +13,12 @@ module SyntaxTreeChecks =
         }
 
         member this.ToMessage(file: string) : Message =
-            { FilePath = file; Id = this.Id; Location = Some(this.Position.Line, this.Position.Column) }
+            {
+                FilePath = file
+                Id = this.Id
+                Location = Some(this.Position.Line, this.Position.Column)
+                Message = this.Id.Message
+            }
 
     let find_warnings (oak: Oak) : ResizeArray<Warning> =
         let warnings = ResizeArray<Warning>()
